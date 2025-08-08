@@ -63,6 +63,10 @@ dependencies {
     // ViewBinding
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.6")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.6")
+        
+        // Coil for image loading (SVG support)
+        implementation("io.coil-kt:coil:2.6.0")
+        implementation("io.coil-kt:coil-svg:2.6.0")
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

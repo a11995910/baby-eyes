@@ -96,6 +96,9 @@ class FloatingWindowManager(private val context: Context) {
         )
         
         params.gravity = Gravity.CENTER
+        // 放宽设置面板宽度到屏幕宽度的 90%
+        val screenWidth = context.resources.displayMetrics.widthPixels
+        params.width = (screenWidth * 0.9f).toInt()
         
         // 初始化设置面板控件
         setupSettingsPanel(settingsPanel!!)
@@ -182,24 +185,30 @@ class FloatingWindowManager(private val context: Context) {
             } else {
                 WindowManager.LayoutParams.TYPE_PHONE
             },
-            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+            // 不允许触摸透传到后面的窗口，用户必须点击确认区关闭
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         )
         
+        // 显示 PNG 弹框背景
+        val imageView = warningOverlay!!.findViewById<ImageView>(R.id.image_popup)
+        imageView?.setImageResource(R.drawable.tankuang)
+
         // 设置警告信息
-        val textWarning = warningOverlay!!.findViewById<TextView>(R.id.text_warning)
-        textWarning.text = message
-        
-        // 设置确认按钮
-        val btnKnow = warningOverlay!!.findViewById<Button>(R.id.btn_know)
-        btnKnow.setOnClickListener {
+        warningOverlay!!.findViewById<TextView>(R.id.text_warning)?.let { textView ->
+            textView.text = message
+        }
+        // 设置确认点击区域（图片按钮）或兼容旧按钮
+        warningOverlay!!.findViewById<View>(R.id.btn_image_confirm)?.setOnClickListener {
             hideWarning()
         }
+        // 兼容旧布局：如果存在名为 btn_know 的资源，则注册点击关闭
+        val btnKnowId = context.resources.getIdentifier("btn_know", "id", context.packageName)
+        if (btnKnowId != 0) {
+            warningOverlay!!.findViewById<View>(btnKnowId)?.setOnClickListener { hideWarning() }
+        }
         
-        // 5秒后自动消失
-        warningOverlay!!.postDelayed({
-            hideWarning()
-        }, 5000)
+        // 移除自动消失，必须用户点击后才关闭
         
         windowManager.addView(warningOverlay, params)
     }

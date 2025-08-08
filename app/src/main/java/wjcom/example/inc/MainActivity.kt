@@ -14,7 +14,6 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
 import android.view.Menu
 import android.view.MenuItem
 import com.google.android.material.snackbar.Snackbar
@@ -74,14 +73,8 @@ class MainActivity : AppCompatActivity(), FloatingWindowManager.OnActionListener
         floatingWindowManager = FloatingWindowManager(this)
         floatingWindowManager.setOnActionListener(this)
 
-        setSupportActionBar(binding.toolbar)
-
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration(navController.graph)
-        setupActionBarWithNavController(navController, appBarConfiguration)
-
-        // 隐藏原来的悬浮按钮，因为现在在Fragment中处理
-        binding.fab.hide()
         
         // 注册广播接收器
         val filter = IntentFilter().apply {
@@ -101,24 +94,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowManager.OnActionListener
         floatingWindowManager.cleanup()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        return when (item.itemId) {
-            R.id.action_settings -> {
-                floatingWindowManager.showSettingsPanel()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
+    // 移除标题栏与右侧 Settings 菜单，不再创建菜单
 
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment_content_main)

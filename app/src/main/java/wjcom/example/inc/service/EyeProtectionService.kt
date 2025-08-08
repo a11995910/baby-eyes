@@ -7,6 +7,9 @@ import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.view.OrientationEventListener
+import android.view.Surface
+import android.view.WindowManager
 import androidx.annotation.OptIn
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -46,6 +49,8 @@ class EyeProtectionService : Service(), LifecycleOwner {
     private var cameraProvider: ProcessCameraProvider? = null
     private var camera: Camera? = null
     private var imageAnalysis: ImageAnalysis? = null
+    private var orientationListener: OrientationEventListener? = null
+    private var currentSurfaceRotation: Int = Surface.ROTATION_0
     
     private var isDetecting = false
     private var consecutiveCloseFrames = 0
@@ -77,6 +82,25 @@ class EyeProtectionService : Service(), LifecycleOwner {
         startForeground(NOTIFICATION_ID, createNotification())
         
         lifecycleRegistry.currentState = Lifecycle.State.STARTED
+
+        // 初始化当前旋转并监听方向变化，确保横竖屏都能正确检测
+        currentSurfaceRotation = getCurrentSurfaceRotation()
+        orientationListener = object : OrientationEventListener(this) {
+            override fun onOrientationChanged(orientation: Int) {
+                val newRotation = when {
+                    orientation in 45..134 -> Surface.ROTATION_270
+                    orientation in 135..224 -> Surface.ROTATION_180
+                    orientation in 225..314 -> Surface.ROTATION_90
+                    else -> Surface.ROTATION_0
+                }
+                if (newRotation != currentSurfaceRotation) {
+                    currentSurfaceRotation = newRotation
+                    imageAnalysis?.targetRotation = newRotation
+                    Log.d(TAG, "更新图像分析 targetRotation=$newRotation")
+                }
+            }
+        }
+        orientationListener?.enable()
     }
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -136,6 +160,7 @@ class EyeProtectionService : Service(), LifecycleOwner {
         
         // 配置图像分析
         imageAnalysis = ImageAnalysis.Builder()
+            .setTargetRotation(currentSurfaceRotation)
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
             .also { analysis ->
@@ -268,7 +293,20 @@ class EyeProtectionService : Service(), LifecycleOwner {
 
         faceDetector.close()
         
+        orientationListener?.disable()
+        orientationListener = null
+        
         lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
+    }
+
+    private fun getCurrentSurfaceRotation(): Int {
+        return try {
+            val wm = getSystemService(WINDOW_SERVICE) as WindowManager
+            // defaultDisplay is deprecated but works across our minSdk for a Service
+            wm.defaultDisplay.rotation
+        } catch (e: Exception) {
+            Surface.ROTATION_0
+        }
     }
     
     private fun createNotificationChannel() {

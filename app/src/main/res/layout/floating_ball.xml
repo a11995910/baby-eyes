@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="56dp"
-    android:layout_height="56dp"
-    android:background="@drawable/floating_ball_background">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
 
     <ImageView
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:id="@+id/image_ball"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
         android:layout_gravity="center"
-        android:src="@drawable/ic_eye_protection"
+        android:src="@drawable/eyeicon"
         android:contentDescription="护眼球"
-        android:tint="@android:color/white" />
+        android:scaleType="centerCrop"
+        android:adjustViewBounds="true" />
 
 </FrameLayout>

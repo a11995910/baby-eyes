@@ -11,46 +11,34 @@
         android:layout_height="match_parent"
         android:padding="24dp">
 
-        <!-- 护眼图标 -->
+        <!-- 护眼图标（使用新 eyeicon.png） -->
         <ImageView
             android:id="@+id/image_eye_protection"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
+            android:layout_width="140dp"
+            android:layout_height="140dp"
             android:layout_marginTop="32dp"
-            android:src="@drawable/ic_eye_protection"
-            android:tint="@color/design_default_color_primary"
+            android:src="@drawable/eyeicon"
+            android:scaleType="centerInside"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- 应用标题 -->
-        <TextView
-            android:id="@+id/text_app_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="宝宝护眼卫士"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@color/design_default_color_primary"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/image_eye_protection" />
+        <!-- 去掉主页标题行 -->
 
         <!-- 功能介绍 -->
         <TextView
             android:id="@+id/text_description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="通过前置摄像头实时检测您与屏幕的距离，当距离过近时及时提醒，帮助您养成良好的用眼习惯。"
+            android:layout_marginTop="16dp"
+            android:text="帮助孩子保持健康用眼。当距离屏幕过近时，温柔地提醒孩子与屏幕保持合适距离，保护视力更安心。"
             android:textSize="16sp"
             android:lineSpacingExtra="4dp"
             android:gravity="center"
             android:textColor="@android:color/black"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/text_app_title" />
+            app:layout_constraintTop_toBottomOf="@id/image_eye_protection" />
 
         <!-- 功能特点 -->
         <LinearLayout
@@ -64,7 +52,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="✅ 实时距离检测"
+                android:text="✅ 温和提醒，保护视力"
                 android:textSize="14sp"
                 android:layout_marginBottom="8dp"
                 android:drawablePadding="8dp"
@@ -73,7 +61,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="✅ 悬浮球便捷控制"
+                android:text="✅ 家长可随时开启/关闭"
                 android:textSize="14sp"
                 android:layout_marginBottom="8dp"
                 android:drawablePadding="8dp"
@@ -82,7 +70,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="✅ 自定义距离阈值"
+                android:text="✅ 可自定义距离与提醒语"
                 android:textSize="14sp"
                 android:layout_marginBottom="8dp"
                 android:drawablePadding="8dp"
@@ -91,7 +79,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="✅ 后台持续监护"
+                android:text="✅ 不上传照片与视频，隐私有保障"
                 android:textSize="14sp"
                 android:layout_marginBottom="8dp"
                 android:drawablePadding="8dp"
@@ -159,7 +147,7 @@
 
             </LinearLayout>
 
-            <!-- 按钮组 -->
+            <!-- 按钮组：设置 与 使用说明 同行排列 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -170,23 +158,23 @@
 
                 <Button
                     android:id="@+id/btn_settings"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
                     android:text="⚙️ 设置"
-                    android:minWidth="120dp"
+                    style="@style/Widget.Material3.Button.OutlinedButton" />
+
+                <Button
+                    android:id="@+id/button_first"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:text="📖 使用说明"
                     style="@style/Widget.Material3.Button.OutlinedButton" />
 
             </LinearLayout>
-
-            <!-- 使用说明按钮 -->
-            <Button
-                android:id="@+id/button_first"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="📖 使用说明"
-                android:minWidth="120dp"
-                style="@style/Widget.Material3.Button.OutlinedButton" />
 
 
 

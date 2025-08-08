@@ -2,44 +2,55 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#99000000">
+    android:background="#99000000"
+    android:clickable="true"
+    android:focusable="true">
 
-    <LinearLayout
+    <!-- 容器：去掉白底，使用透明背景 -->
+    <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:orientation="vertical"
-        android:background="@drawable/warning_background"
-        android:padding="32dp">
+        android:translationX="-6dp">
 
+        <!-- 弹框图片作为视觉外观 -->
         <ImageView
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_gravity="center_horizontal"
-            android:src="@drawable/ic_warning"
-            android:layout_marginBottom="16dp"
-            android:tint="@color/design_default_color_error" />
+            android:id="@+id/image_popup"
+            android:layout_width="340dp"
+            android:layout_height="420dp"
+            android:layout_gravity="center"
+            android:scaleType="fitCenter" />
 
+        <!-- 文案放在图片中间区域 -->
         <TextView
             android:id="@+id/text_warning"
-            android:layout_width="wrap_content"
+            android:layout_width="300dp"
             android:layout_height="wrap_content"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="180dp"
             android:text="离手机太近，注意护眼！"
-            android:textSize="18sp"
+            android:textSize="16sp"
             android:textStyle="bold"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="24dp"
-            android:textColor="@android:color/black"
+            android:textColor="@android:color/white"
+            android:shadowColor="#55000000"
+            android:shadowDx="0"
+            android:shadowDy="2"
+            android:shadowRadius="4"
+            android:padding="4dp"
+            android:maxLines="3"
             android:gravity="center" />
 
-        <Button
-            android:id="@+id/btn_know"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="我知道了"
-            android:layout_gravity="center_horizontal"
-            android:minWidth="120dp" />
+        <!-- 透明点击区：覆盖在图片按钮位置（根据素材大致定位） -->
+        <View
+            android:id="@+id/btn_image_confirm"
+            android:layout_width="240dp"
+            android:layout_height="64dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="100dp"
+            android:background="@android:color/transparent"
+            android:clickable="true"
+            android:focusable="true" />
 
-    </LinearLayout>
+    </FrameLayout>
 
 </FrameLayout>
