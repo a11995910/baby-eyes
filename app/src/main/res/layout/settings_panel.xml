@@ -104,9 +104,69 @@
         android:hint="请输入提醒语"
         android:maxLength="20"
         android:maxLines="2"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="8dp"
         android:background="@drawable/edit_background"
         android:padding="8dp" />
+
+    <!-- 语音播报设置 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="启用语音播报"
+            android:textSize="14sp"
+            android:textColor="@android:color/black" />
+
+        <Switch
+            android:id="@+id/switch_voice_warning"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+    <!-- 录音控制区域 -->
+    <LinearLayout
+        android:id="@+id/layout_voice_recording"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="录制语音："
+            android:textSize="14sp"
+            android:textColor="@android:color/black"
+            android:layout_gravity="center_vertical" />
+
+        <Button
+            android:id="@+id/btn_record_voice"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="长按录音（最长4秒）"
+            android:textSize="12sp"
+            android:layout_marginHorizontal="8dp"
+            style="@style/Widget.Material3.Button.OutlinedButton" />
+
+        <Button
+            android:id="@+id/btn_play_voice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="试听"
+            android:textSize="12sp"
+            android:enabled="false"
+            style="@style/Widget.Material3.Button.OutlinedButton" />
+
+    </LinearLayout>
 
     <!-- 按钮 -->
     <LinearLayout

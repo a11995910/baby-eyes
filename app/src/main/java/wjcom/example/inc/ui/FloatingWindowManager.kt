@@ -6,13 +6,21 @@ import android.os.Build
 import android.view.*
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Handler
+import android.os.Looper
 import wjcom.example.inc.R
+import wjcom.example.inc.utils.AudioRecorderManager
 import wjcom.example.inc.utils.SharedPrefsManager
 
 class FloatingWindowManager(private val context: Context) {
     
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val prefsManager = SharedPrefsManager(context)
+    private val audioRecorderManager = AudioRecorderManager(context)
     
     private var floatingBall: View? = null
     private var settingsPanel: View? = null
@@ -148,6 +156,65 @@ class FloatingWindowManager(private val context: Context) {
             }
         }
         
+        // 语音播报设置
+        val switchVoiceWarning = panel.findViewById<Switch>(R.id.switch_voice_warning)
+        val layoutVoiceRecording = panel.findViewById<LinearLayout>(R.id.layout_voice_recording)
+        val btnRecordVoice = panel.findViewById<Button>(R.id.btn_record_voice)
+        val btnPlayVoice = panel.findViewById<Button>(R.id.btn_play_voice)
+        
+        // 初始化语音播报开关状态
+        switchVoiceWarning.isChecked = prefsManager.isVoiceWarningEnabled()
+        layoutVoiceRecording.visibility = if (switchVoiceWarning.isChecked) View.VISIBLE else View.GONE
+        
+        // 更新试听按钮状态
+        updatePlayButtonState(btnPlayVoice)
+        
+        // 语音播报开关监听
+        switchVoiceWarning.setOnCheckedChangeListener { _, isChecked ->
+            prefsManager.setVoiceWarningEnabled(isChecked)
+            layoutVoiceRecording.visibility = if (isChecked) View.VISIBLE else View.GONE
+            
+            if (!isChecked) {
+                // 关闭语音播报时停止可能正在进行的录音或播放
+                audioRecorderManager.release()
+            }
+        }
+        
+        // 录音按钮长按监听
+        btnRecordVoice.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    if (checkAudioPermission()) {
+                        startRecording(btnRecordVoice, btnPlayVoice)
+                    } else {
+                        showAudioPermissionDialog()
+                    }
+                    true
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    stopRecording(btnRecordVoice, btnPlayVoice)
+                    true
+                }
+                else -> false
+            }
+        }
+        
+        // 试听按钮点击监听
+        btnPlayVoice.setOnClickListener {
+            if (audioRecorderManager.isPlaying()) {
+                audioRecorderManager.stopPlaying()
+                btnPlayVoice.text = "试听"
+            } else {
+                if (audioRecorderManager.playRecording()) {
+                    btnPlayVoice.text = "停止"
+                    // 播放完成后更新按钮状态
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        btnPlayVoice.text = "试听"
+                    }, 4000) // 最长4秒
+                }
+            }
+        }
+        
         // 关闭按钮
         val btnCancel = panel.findViewById<Button>(R.id.btn_cancel)
         val btnConfirm = panel.findViewById<Button>(R.id.btn_confirm)
@@ -194,9 +261,20 @@ class FloatingWindowManager(private val context: Context) {
         val imageView = warningOverlay!!.findViewById<ImageView>(R.id.image_popup)
         imageView?.setImageResource(R.drawable.tankuang)
 
-        // 设置警告信息
+        // 设置警告信息或喇叭图标
         warningOverlay!!.findViewById<TextView>(R.id.text_warning)?.let { textView ->
-            textView.text = message
+            if (prefsManager.isVoiceWarningEnabled() && audioRecorderManager.hasRecording()) {
+                // 启用语音播报且有录音文件时显示喇叭图标
+                textView.text = "🔊"
+                textView.textSize = 32f
+                
+                // 播放录音
+                audioRecorderManager.playRecording()
+            } else {
+                // 显示文字消息
+                textView.text = message
+                textView.textSize = 16f
+            }
         }
         // 设置确认点击区域（图片按钮）或兼容旧按钮
         warningOverlay!!.findViewById<View>(R.id.btn_image_confirm)?.setOnClickListener {
@@ -218,6 +296,8 @@ class FloatingWindowManager(private val context: Context) {
             windowManager.removeView(it)
             warningOverlay = null
         }
+        // 停止播放音频
+        audioRecorderManager.stopPlaying()
     }
     
     private fun showRemoveDialog() {
@@ -285,5 +365,46 @@ class FloatingWindowManager(private val context: Context) {
         hideFloatingBall()
         hideSettingsPanel()
         hideWarning()
+        audioRecorderManager.release()
+    }
+    
+    // 录音相关辅助方法
+    private fun checkAudioPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+    
+    private fun showAudioPermissionDialog() {
+        Toast.makeText(context, "需要录音权限才能录制语音提醒", Toast.LENGTH_SHORT).show()
+    }
+    
+    private fun startRecording(recordBtn: Button, playBtn: Button) {
+        if (audioRecorderManager.startRecording()) {
+            recordBtn.text = "录音中..."
+            recordBtn.isEnabled = false
+            playBtn.isEnabled = false
+        } else {
+            Toast.makeText(context, "开始录音失败", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    private fun stopRecording(recordBtn: Button, playBtn: Button) {
+        if (audioRecorderManager.isRecording()) {
+            if (audioRecorderManager.stopRecording()) {
+                recordBtn.text = "长按录音（最长4秒）"
+                recordBtn.isEnabled = true
+                updatePlayButtonState(playBtn)
+                Toast.makeText(context, "录音完成", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "停止录音失败", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    private fun updatePlayButtonState(playBtn: Button) {
+        playBtn.isEnabled = audioRecorderManager.hasRecording()
+        playBtn.text = if (audioRecorderManager.isPlaying()) "停止" else "试听"
     }
 }

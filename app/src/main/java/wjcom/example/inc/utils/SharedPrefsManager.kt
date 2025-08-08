@@ -16,6 +16,7 @@ class SharedPrefsManager(context: Context) {
         private const val KEY_DETECTION_ENABLED = "detection_enabled"
         private const val KEY_FIRST_LAUNCH = "first_launch"
         private const val KEY_PERMISSIONS_GRANTED = "permissions_granted"
+        private const val KEY_VOICE_WARNING_ENABLED = "voice_warning_enabled"
         
         // 默认值
         private const val DEFAULT_DISTANCE_THRESHOLD = 30f
@@ -99,5 +100,19 @@ class SharedPrefsManager(context: Context) {
      */
     fun setPermissionsGranted(granted: Boolean) {
         prefs.edit().putBoolean(KEY_PERMISSIONS_GRANTED, granted).apply()
+    }
+    
+    /**
+     * 获取语音播报是否启用
+     */
+    fun isVoiceWarningEnabled(): Boolean {
+        return prefs.getBoolean(KEY_VOICE_WARNING_ENABLED, false)
+    }
+    
+    /**
+     * 设置语音播报启用状态
+     */
+    fun setVoiceWarningEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_VOICE_WARNING_ENABLED, enabled).apply()
     }
 }

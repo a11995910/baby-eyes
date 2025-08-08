@@ -29,14 +29,23 @@ class MainActivity : AppCompatActivity(), FloatingWindowManager.OnActionListener
     private lateinit var prefsManager: SharedPrefsManager
     private lateinit var floatingWindowManager: FloatingWindowManager
     
-    // 权限请求回调
-    private val cameraPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            checkOverlayPermission()
-        } else {
-            showPermissionDeniedDialog()
+    // 多权限请求回调
+    private val permissionsLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val cameraGranted = permissions[Manifest.permission.CAMERA] ?: false
+        val audioGranted = permissions[Manifest.permission.RECORD_AUDIO] ?: false
+        
+        when {
+            cameraGranted && audioGranted -> {
+                checkOverlayPermission()
+            }
+            !cameraGranted -> {
+                showPermissionDeniedDialog("摄像头权限是护眼功能的必需权限，请在设置中手动授权。")
+            }
+            !audioGranted -> {
+                showPermissionDeniedDialog("录音权限是语音播报功能的必需权限，请在设置中手动授权。")
+            }
         }
     }
     
@@ -105,7 +114,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowManager.OnActionListener
     private fun showWelcomeDialog() {
         AlertDialog.Builder(this)
             .setTitle("欢迎使用宝宝护眼卫士")
-            .setMessage("这是一款保护您眼睛健康的应用。\n\n使用前需要授权摄像头和悬浮窗权限。")
+            .setMessage("这是一款保护您眼睛健康的应用。\n\n使用前需要授权摄像头、录音和悬浮窗权限。")
             .setPositiveButton("开始使用") { _, _ ->
                 prefsManager.setFirstLaunch(false)
                 checkPermissions()
@@ -118,11 +127,20 @@ class MainActivity : AppCompatActivity(), FloatingWindowManager.OnActionListener
     }
     
     private fun checkPermissions() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) 
-            != PackageManager.PERMISSION_GRANTED) {
-            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-        } else {
+        val cameraGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        val audioGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+        
+        if (cameraGranted && audioGranted) {
             checkOverlayPermission()
+        } else {
+            val permissionsToRequest = mutableListOf<String>()
+            if (!cameraGranted) {
+                permissionsToRequest.add(Manifest.permission.CAMERA)
+            }
+            if (!audioGranted) {
+                permissionsToRequest.add(Manifest.permission.RECORD_AUDIO)
+            }
+            permissionsLauncher.launch(permissionsToRequest.toTypedArray())
         }
     }
     
@@ -143,10 +161,10 @@ class MainActivity : AppCompatActivity(), FloatingWindowManager.OnActionListener
         Snackbar.make(binding.root, "权限授权完成，可以开始使用护眼功能", Snackbar.LENGTH_LONG).show()
     }
     
-    private fun showPermissionDeniedDialog() {
+    private fun showPermissionDeniedDialog(message: String) {
         AlertDialog.Builder(this)
             .setTitle("权限被拒绝")
-            .setMessage("摄像头权限是护眼功能的必需权限，请在设置中手动授权。")
+            .setMessage(message)
             .setPositiveButton("去设置") { _, _ ->
                 val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                     data = Uri.fromParts("package", packageName, null)

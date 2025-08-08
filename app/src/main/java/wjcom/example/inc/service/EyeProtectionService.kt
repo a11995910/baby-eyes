@@ -56,6 +56,12 @@ class EyeProtectionService : Service(), LifecycleOwner {
     private var consecutiveCloseFrames = 0
     private val maxConsecutiveFrames = 5 // 连续检测到距离过近的帧数阈值
     
+    // 相机节能管理
+    private var cameraActive = false
+    private var noFaceDetectedFrames = 0
+    private val maxNoFaceFrames = 30 // 30帧无人脸后暂停相机
+    private val cameraResumeDelay = 3000L // 3秒后重新启动相机检测
+    
     // ML Kit人脸检测器
     private val faceDetector = FaceDetection.getClient(
         FaceDetectorOptions.Builder()
@@ -140,7 +146,7 @@ class EyeProtectionService : Service(), LifecycleOwner {
         cameraProviderFuture.addListener({
             try {
                 cameraProvider = cameraProviderFuture.get()
-                bindCameraUseCases()
+                activateCamera()
                 isDetecting = true
                 Log.d(TAG, "检测已启动")
             } catch (e: Exception) {
@@ -203,6 +209,9 @@ class EyeProtectionService : Service(), LifecycleOwner {
                 if (faces.isNotEmpty()) {
                     val face = faces[0] // 取第一个检测到的人脸
                     
+                    // 重置无人脸计数
+                    noFaceDetectedFrames = 0
+                    
                     // 尝试使用眼部特征点计算距离
                     val leftEye = face.getLandmark(com.google.mlkit.vision.face.FaceLandmark.LEFT_EYE)
                     val rightEye = face.getLandmark(com.google.mlkit.vision.face.FaceLandmark.RIGHT_EYE)
@@ -243,6 +252,13 @@ class EyeProtectionService : Service(), LifecycleOwner {
                 } else {
                     Log.d(TAG, "未检测到人脸")
                     consecutiveCloseFrames = 0 // 重置计数器
+                    
+                    // 增加无人脸计数
+                    noFaceDetectedFrames++
+                    if (noFaceDetectedFrames >= maxNoFaceFrames && cameraActive) {
+                        Log.d(TAG, "连续${maxNoFaceFrames}帧未检测到人脸，暂停相机节省电量")
+                        pauseCamera()
+                    }
                 }
             }
             .addOnFailureListener { e ->
@@ -257,6 +273,10 @@ class EyeProtectionService : Service(), LifecycleOwner {
         Log.d(TAG, "停止检测")
         isDetecting = false
         consecutiveCloseFrames = 0
+        
+        // 重置相机状态
+        cameraActive = false
+        noFaceDetectedFrames = 0
         
         cameraProvider?.unbindAll()
         stopSelf()
@@ -307,6 +327,31 @@ class EyeProtectionService : Service(), LifecycleOwner {
         } catch (e: Exception) {
             Surface.ROTATION_0
         }
+    }
+    
+    // 相机节能管理方法
+    private fun activateCamera() {
+        if (cameraActive) return
+        
+        bindCameraUseCases()
+        cameraActive = true
+        noFaceDetectedFrames = 0
+        Log.d(TAG, "相机已激活")
+    }
+    
+    private fun pauseCamera() {
+        if (!cameraActive) return
+        
+        cameraProvider?.unbindAll()
+        cameraActive = false
+        Log.d(TAG, "相机已暂停以节省电量")
+        
+        // 延迟重新激活相机
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            if (isDetecting && cameraProvider != null) {
+                activateCamera()
+            }
+        }, cameraResumeDelay)
     }
     
     private fun createNotificationChannel() {
